@@ -81,7 +81,18 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               branch: process.env.DEPLOY_BRANCH
-            });
+            }).then(data=>{
+              console.log('data',data)
+              return true;
+            }).catch((e)=>{
+              console.log('e',e)
+              if(e && e.status===404){
+                // then manual trigger
+                return false
+              }else{
+                core.setFailed('check isDeployBranchExist error: ',e.message)
+              }
+            })
 
       - id: blogaSiteId
         if: steps.isFirstCommit.outputs.result == 'false'
