@@ -17,6 +17,7 @@ jobs:
       repositoryName: ${{ steps.repositoryName.outputs.result}}
       sourceBranch: ${{ steps.sourceBranch.outputs.result }}
       deployBranch: ${{ steps.deployBranch.outputs.result }}
+      isDeployBranchExist: ${{ steps.isDeployBranchExist.outputs.result }}
       isSourceBranch: ${{ steps.isSourceBranch.outputs.result }}
       blogaAccessToken: ${{ steps.blogaAccessToken.outputs.result }}
       blogaSiteId: ${{ steps.blogaSiteId.outputs.result }}
@@ -69,6 +70,19 @@ jobs:
               return false
             }
           result-encoding: string
+      - id: isDeployBranchExist
+        uses: actions/github-script@v2
+        env:
+          DEPLOY_BRANCH: ${{ steps.deployBranch.outputs.result }}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            return github.repos.getBranch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: process.env.DEPLOY_BRANCH
+            });
+
       - id: blogaSiteId
         if: steps.isFirstCommit.outputs.result == 'false'
         uses: actions/github-script@v2
@@ -194,7 +208,7 @@ jobs:
         uses: actions/checkout@v2
         continue-on-error: true
         with:
-          ref: gh-pages
+          ref: ${{ needs.init.outputs.deployBranch }}
           path: .bloga-last-build
       - name: Get gatsby-latest-cache-key content
         if: ${{ steps.get-gatsby-latest-cache-key-file.outcome == 'success' }}
